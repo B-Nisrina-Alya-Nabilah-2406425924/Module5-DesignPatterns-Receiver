@@ -85,5 +85,13 @@ This is the place for you to write reflections:
 ### Mandatory (Subscriber) Reflections
 
 #### Reflection Subscriber-1
-
+1. In this tutorial, we used RwLock<> to synchronise the use of Vec of Notifications. Explain why it is necessary for this case, and explain why we do not use Mutex<> instead?
+    - Karena aplikasi Receiver berjalan secara multithreaded, ada kemungkinan satu thread sedang mencoba menambah notifikasi baru (add), sementara thread lain sedang mencoba menampilkan daftar notifikasi (list_all_as_string). Tanpa sinkronisasi, akan terjadi data race yang bisa membuat program crash. Mutex Hanya mengizinkan satu thread untuk mengakses data pada satu waktu, baik itu untuk membaca maupun menulis. Jika banyak orang yang ingin membaca data secara bersamaan, mereka harus antre satu-satu, yang mana ini tidak efisien. Sedangkan RwLock Lebih fleksibel. Ia mengizinkan banyak pembaca (readers) sekaligus selama tidak ada yang menulis. Namun, ia akan memberikan akses eksklusif hanya kepada satu penulis (writer). Sehingga, untuk kasus NOTIFICATIONS, kita akan lebih sering membaca (menampilkan list) daripada menulis (menambah notifikasi). Jadi, RwLock jauh lebih efisien daripada Mutex. 
+2. In this tutorial, we used lazy_static external library to define Vec and DashMap as a “static” variable. Compared to Java where we can mutate the content of a static variable via a static function, why did not Rust allow us to do so?
+    - Di Java, variabel static bisa diubah dengan mudah karena Java memiliki Garbage Collector dan aturan safety yang berbeda. Di Rust, variabel statis bersifat immutable secara default karena alasan keamanan memori:
+      - Jika Rust mengizinkan banyak thread mengubah satu variabel statis global tanpa proteksi, akan terjadi undefined behavior.
+      - Variabel statis hidup selama program berjalan. Rust sangat ketat dalam memastikan tidak ada pointer yang tidak valid (dangling pointers).
+      - Variabel statis biasa di Rust harus bisa dihitung nilainya saat compile-time. Objek kompleks seperti Vec atau DashMap butuh alokasi memori di heap yang hanya terjadi saat program jalan (runtime).
+    - Itulah alasan kita menggunakan lazy_static. Library ini menunda inisialisasi variabel sampai pertama kali diakses (lazy), dan membungkusnya dengan thread-safe wrapper (seperti RwLock) sehingga kita bisa mengubah isinya secara aman tanpa melanggar aturan ownership Rust.
+   
 #### Reflection Subscriber-2
